@@ -7,6 +7,7 @@ import com.example.deposits.domain.AccountStatus;
 import com.example.deposits.domain.Transaction;
 import com.example.deposits.domain.TransactionType;
 import com.example.deposits.repository.AccountRepository;
+import com.example.deposits.repository.AccountWithCurrencyPrecision;
 import com.example.deposits.repository.TransactionRepository;
 import com.example.deposits.support.IdSupport;
 import org.springframework.stereotype.Service;
@@ -56,11 +57,14 @@ public class AccountService {
     }
 
     public Account deposit(long id, BigDecimal amount) {
-        Account account = accountRepository.findById(id)
+        // Use authoritative currency precision from the DB to ensure we always
+        // apply the correct minor-unit scale even if the cache hasn't refreshed yet.
+        AccountWithCurrencyPrecision projection = accountRepository.findByIdWithCurrencyPrecision(id)
                 .orElseThrow(() -> new NoSuchElementException("Account not found: " + id));
 
-        Currency currency = currencyCache.get(account.getCurrencyCode());
-        BigDecimal scaled = amount.setScale(currency.minorUnits(), RoundingMode.HALF_UP);
+        Account account = projection.getAccount();
+        int minorUnits = projection.getCurrencyMinorUnits();
+        BigDecimal scaled = amount.setScale(minorUnits, RoundingMode.HALF_UP);
 
         account.deposit(scaled);
 

@@ -5,5 +5,5 @@ import java.util.List;
 
 public record BatchImportRequest(long accountId, List<TransactionEntry> transactions) {
 
-    public record TransactionEntry(String type, BigDecimal amount) {}
+    public record TransactionEntry(String type, BigDecimal amount, String reference) {}
 }

@@ -88,8 +88,8 @@ class AccountFlowIT {
 
         // Batch import
         BatchImportRequest batchReq = new BatchImportRequest(id, List.of(
-                new BatchImportRequest.TransactionEntry("DEPOSIT", new BigDecimal("50.00")),
-                new BatchImportRequest.TransactionEntry("DEPOSIT", new BigDecimal("25.00"))
+                new BatchImportRequest.TransactionEntry("DEPOSIT", new BigDecimal("50.00"), "REF-1"),
+                new BatchImportRequest.TransactionEntry("DEPOSIT", new BigDecimal("25.00"), "REF-2")
         ));
         ResponseEntity<Void> batchResp = restTemplate.postForEntity(
                 base() + "/transactions:batch-import", batchReq, Void.class);

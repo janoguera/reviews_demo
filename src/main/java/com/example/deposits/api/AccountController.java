@@ -53,9 +53,12 @@ public class AccountController {
         List<TransactionImportService.TransactionLine> lines = request.transactions().stream()
                 .map(e -> new TransactionImportService.TransactionLine(
                         TransactionType.valueOf(e.type()),
-                        e.amount()
+                        e.amount(),
+                        e.reference()
                 ))
                 .toList();
         transactionImportService.importBatch(request.accountId(), lines);
     }
+
+
 }

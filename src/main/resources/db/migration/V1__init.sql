@@ -4,8 +4,8 @@ CREATE TABLE account (
     currency_code     VARCHAR(3)      NOT NULL,
     balance           NUMERIC(19,4)   NOT NULL,
     status            VARCHAR(20)     NOT NULL,
-    creation_date     TIMESTAMP(6)    NOT NULL,
-    last_modified_date TIMESTAMP(6)   NOT NULL
+    creation_date     TIMESTAMP       NOT NULL,
+    last_modified_date TIMESTAMP      NOT NULL
 );
 
 CREATE TABLE account_transaction (
@@ -13,8 +13,8 @@ CREATE TABLE account_transaction (
     account_id        BIGINT          NOT NULL,
     type              VARCHAR(20)     NOT NULL,
     amount            NUMERIC(19,4)   NOT NULL,
-    creation_date     TIMESTAMP(6)    NOT NULL,
-    last_modified_date TIMESTAMP(6)   NOT NULL
+    creation_date     TIMESTAMP       NOT NULL,
+    last_modified_date TIMESTAMP      NOT NULL
 );
 
 CREATE TABLE currency (
