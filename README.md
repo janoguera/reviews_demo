@@ -1,6 +1,6 @@
 # Deposit Account Microservice — Code Review Demo
 
-This is a generic Spring Boot deposit-account microservice built as a teaching tool for code reviewers learning to validate pull requests against Architecture Decision Records (ADRs). The ADRs documented here are abstracted, generic engineering principles containing no confidential information and applicable across many systems.
+This is a generic Spring Boot deposit-account microservice built as a teaching tool for code reviewers learning to validate pull requests against Architecture Decision Records (ADRs). The principles documented here are widely-known, industry-standard engineering practices (e.g. minimal column projection, set-based processing, cached reference data) restated generically for this exercise. They are not tied to any specific organisation's systems, schema, or internal standards.
 
 ## Tech Stack
 
@@ -58,5 +58,5 @@ This service is built to comply with the following engineering principles. Pull 
 | **Data Access** | Minimal column selection | Queries select the minimum set of columns and rows needed; no `SELECT *`. |
 | **Data Access** | Set-based batch operations | When processing multiple records, use set-based (batched) operations, not one-row-at-a-time loops. |
 | **Data Modelling** | Numeric primary keys | Every table has an efficient numeric primary key (BIGINT assigned by the application), not a UUID/string PK. |
-| **Data Modelling** | Audit columns | Every root table has `creation_date` and `last_modified_date` audit columns (TIMESTAMP(6) NOT NULL). |
+| **Data Modelling** | Audit columns | Every root table has `creation_date` and `last_modified_date` audit columns (TIMESTAMP NOT NULL). |
 | **Caching Strategy** | In-process heap cache | Caching uses an in-process heap cache; config is always served from cache in hot paths — never fetched from the database mid-request. |

@@ -21,12 +21,21 @@ public interface AccountRepository {
             """)
     void insert(@BindBean Account account);
 
-    @SqlQuery("""
-            SELECT id, external_id, currency_code, balance, status, creation_date, last_modified_date
-            FROM account
-            WHERE id = :id
-            """)
+    // Select all columns so that any new columns added in future migrations are
+    // picked up automatically without having to update this query.
+    @SqlQuery("SELECT * FROM account WHERE id = :id")
     Optional<Account> findById(@Bind("id") long id);
+
+    @SqlQuery("""
+            SELECT a.id, a.external_id, a.currency_code, a.balance, a.status,
+                   a.creation_date, a.last_modified_date,
+                   c.minor_units AS currency_minor_units
+            FROM account a
+            JOIN currency c ON a.currency_code = c.code
+            WHERE a.id = :id
+            """)
+    @RegisterRowMapper(AccountWithCurrencyRowMapper.class)
+    Optional<AccountWithCurrencyPrecision> findByIdWithCurrencyPrecision(@Bind("id") long id);
 
     @SqlUpdate("""
             UPDATE account
