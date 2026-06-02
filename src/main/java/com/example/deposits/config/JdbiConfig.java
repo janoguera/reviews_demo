@@ -34,4 +34,5 @@ public class JdbiConfig {
     public CurrencyRepository currencyRepository(Jdbi jdbi) {
         return jdbi.onDemand(CurrencyRepository.class);
     }
+
 }
