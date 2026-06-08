@@ -1,0 +1,83 @@
+plugins {
+    id 'org.springframework.boot' version '3.2.5'
+    id 'io.spring.dependency-management' version '1.1.4'
+    id 'java'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+sourceSets {
+    integrationTest {
+        java {
+            srcDir 'src/integrationTest/java'
+        }
+        resources {
+            srcDir 'src/integrationTest/resources'
+        }
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
+configurations {
+    integrationTestImplementation.extendsFrom testImplementation
+    integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.jdbi:jdbi3-core:3.45.1'
+    implementation 'org.jdbi:jdbi3-sqlobject:3.45.1'
+    runtimeOnly 'org.postgresql:postgresql'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    integrationTestImplementation 'org.testcontainers:postgresql:1.20.6'
+    integrationTestImplementation 'org.testcontainers:junit-jupiter:1.20.6'
+    // Force testcontainers core to 1.20.6 to avoid being downgraded by the jdbc transitive dep
+    integrationTestImplementation 'org.testcontainers:testcontainers:1.20.6'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+tasks.register('integrationTest', Test) {
+    description = 'Runs integration tests.'
+    group = 'verification'
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'integration'
+    }
+    shouldRunAfter test
+    // Rancher Desktop uses a non-standard socket path.
+    // Testcontainers needs to find the socket AND use a modern Docker API version.
+    // When apiVersion == UNKNOWN (no 'api.version' set), it defaults to 1.32 which
+    // Rancher Desktop rejects (minimum 1.41). So we set both.
+    // Ryuk resource-reaper tries to volume-mount the Docker socket into a container
+    // which fails on Rancher Desktop (macOS host path not accessible in the VM), so disable it.
+    def rdSocket = System.getProperty('user.home') + '/.rd/docker.sock'
+    if (new File(rdSocket).exists()) {
+        // tc.host sets the docker host for TestcontainersHostPropertyClientProviderStrategy
+        systemProperty 'tc.host', "unix://${rdSocket}"
+        // api.version overrides the 1.32 default in getClientForConfig()
+        systemProperty 'api.version', '1.44'
+        // Ryuk cannot mount the socket on Rancher Desktop
+        environment 'TESTCONTAINERS_RYUK_DISABLED', 'true'
+    }
+}
