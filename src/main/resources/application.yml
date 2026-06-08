@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/deposits}
+    username: ${SPRING_DATASOURCE_USERNAME:deposits}
+    password: ${SPRING_DATASOURCE_PASSWORD:deposits}
+  flyway:
+    enabled: true
+
+server:
+  port: 8080
