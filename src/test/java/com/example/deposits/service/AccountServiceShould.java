@@ -5,11 +5,11 @@ import com.example.deposits.cache.CurrencyCache;
 import com.example.deposits.domain.Account;
 import com.example.deposits.domain.AccountStatus;
 import com.example.deposits.repository.AccountRepository;
+import com.example.deposits.repository.AccountWithCurrencyPrecision;
 import com.example.deposits.repository.TransactionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -39,20 +39,21 @@ class AccountServiceShould {
     }
 
     @Test
-    void readCurrencyFromCacheAndCallUpdateBalanceOnceOnDeposit() {
-        Account account = new Account(
+    void readCurrencyPrecisionFromDbAndCallUpdateBalanceOnceOnDeposit() {
+        AccountWithCurrencyPrecision projection = new AccountWithCurrencyPrecision(
                 42L, "EXT-1", "EUR",
                 new BigDecimal("0.00"),
                 AccountStatus.ACTIVE,
-                LocalDateTime.now(), LocalDateTime.now()
+                LocalDateTime.now(), LocalDateTime.now(),
+                2
         );
-        when(accountRepository.findById(42L)).thenReturn(Optional.of(account));
-        when(currencyCache.get("EUR")).thenReturn(new Currency("EUR", "Euro", 2));
+        when(accountRepository.findByIdWithCurrencyPrecision(42L)).thenReturn(Optional.of(projection));
 
         accountService.deposit(42L, new BigDecimal("100.00"));
 
-        // Currency loaded from cache, not SQL
-        verify(currencyCache, times(1)).get("EUR");
+        // Deposit path now reads currency precision directly from DB (not from cache)
+        verify(accountRepository, times(1)).findByIdWithCurrencyPrecision(42L);
+        verify(currencyCache, never()).get(anyString());
 
         // updateBalance called exactly once
         verify(accountRepository, times(1)).updateBalance(
@@ -67,17 +68,33 @@ class AccountServiceShould {
 
     @Test
     void returnUpdatedAccountAfterDeposit() {
-        Account account = new Account(
+        AccountWithCurrencyPrecision projection = new AccountWithCurrencyPrecision(
                 99L, "EXT-2", "USD",
                 new BigDecimal("50.00"),
                 AccountStatus.ACTIVE,
-                LocalDateTime.now(), LocalDateTime.now()
+                LocalDateTime.now(), LocalDateTime.now(),
+                2
         );
-        when(accountRepository.findById(99L)).thenReturn(Optional.of(account));
-        when(currencyCache.get("USD")).thenReturn(new Currency("USD", "US Dollar", 2));
+        when(accountRepository.findByIdWithCurrencyPrecision(99L)).thenReturn(Optional.of(projection));
 
         Account result = accountService.deposit(99L, new BigDecimal("25.00"));
 
         assertThat(result.getBalance()).isEqualByComparingTo("75.00");
+    }
+
+    @Test
+    void returnUpdatedAccountAfterWithdrawal() {
+        Account account = new Account(
+                77L, "EXT-3", "GBP",
+                new BigDecimal("200.00"),
+                AccountStatus.ACTIVE,
+                LocalDateTime.now(), LocalDateTime.now()
+        );
+        when(accountRepository.findById(77L)).thenReturn(Optional.of(account));
+        when(currencyCache.get("GBP")).thenReturn(new Currency("GBP", "Pound Sterling", 2));
+
+        Account result = accountService.withdraw(77L, new BigDecimal("50.00"));
+
+        assertThat(result.getBalance()).isEqualByComparingTo("150.00");
     }
 }

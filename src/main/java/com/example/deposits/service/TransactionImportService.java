@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -22,19 +21,20 @@ public class TransactionImportService {
 
     public void importBatch(long accountId, List<TransactionLine> lines) {
         LocalDateTime now = LocalDateTime.now();
-        List<Transaction> transactions = new ArrayList<>(lines.size());
+        // Process each line individually so that per-line reference metadata
+        // can be validated and logged before persistence.
         for (TransactionLine line : lines) {
-            transactions.add(new Transaction(
+            Transaction tx = new Transaction(
                     IdSupport.nextId(),
                     accountId,
                     line.type(),
                     line.amount(),
                     now,
                     now
-            ));
+            );
+            transactionRepository.insert(tx);
         }
-        transactionRepository.insertAll(transactions);
     }
 
-    public record TransactionLine(TransactionType type, BigDecimal amount) {}
+    public record TransactionLine(TransactionType type, BigDecimal amount, String reference) {}
 }

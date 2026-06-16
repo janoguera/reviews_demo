@@ -35,8 +35,8 @@ public final class DataModellingExamples {
                 account_id         BIGINT          NOT NULL,
                 amount             NUMERIC(19, 4)  NOT NULL,
                 reference          VARCHAR(64),
-                creation_date      TIMESTAMP(6)    NOT NULL,
-                last_modified_date TIMESTAMP(6)    NOT NULL
+                creation_date      TIMESTAMP       NOT NULL,
+                last_modified_date TIMESTAMP       NOT NULL
             );
             """;
 
@@ -114,8 +114,8 @@ public final class DataModellingExamples {
     // 2. AUDIT COLUMNS
     //    Every ROOT table (one that owns its own data, not a child record)
     //    must have:
-    //      creation_date      TIMESTAMP(6) NOT NULL
-    //      last_modified_date TIMESTAMP(6) NOT NULL
+    //      creation_date      TIMESTAMP NOT NULL
+    //      last_modified_date TIMESTAMP NOT NULL
     //    These columns are mandatory for traceability, debugging, and compliance.
     //    Child tables (e.g. line items of a root entity) inherit audit context
     //    from their parent and do not need duplicate audit columns.
